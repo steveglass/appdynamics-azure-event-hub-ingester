@@ -1,0 +1,25 @@
+# yaml Go dep: go get gopkg.in/yaml.v2
+
+# AppD controller
+controller: 
+# AppD port
+port: 
+# true or false
+ssl: 
+# AppD analytics endpoint
+analyticsEndPoint: 
+# AppD global account name on license page
+globalAccountName: 
+# unique key from analytics
+analyticsKey: 
+# this will be the name of the custom schema in AppD
+analyticsSchema: 
+
+azureSubscriptionId: 
+azureEventHubNameSpace: 
+azureEventHubConnString: 
+azureClientID: 
+azureClientSecret: 
+azureTenantID: 
+azureHubName: 
+azureResourceGroup: 
