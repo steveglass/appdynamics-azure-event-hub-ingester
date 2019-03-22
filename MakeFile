@@ -1,0 +1,19 @@
+export GOPATH=/Users/steve.glass/go/appdynamics-azure-event-hub
+export GOBIN=/Users/steve.glass/go/appdynamics-azure-event-hub/bin
+VERSION         :=      $(shell cat ./VERSION)
+IMAGE_NAME      :=      appdynamics-azure-event-hub
+
+all: install
+
+install:
+	go install -v -i
+
+test:
+	go test ./... -v
+
+fmt:
+        go fmt ./... -v
+
+
+#image:
+#	docker build -t appdynamics-azure-event-hub .
