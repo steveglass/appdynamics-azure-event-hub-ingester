@@ -15,14 +15,16 @@ type appdConfig struct {
 	AnalyticsEp             string `yaml:"analyticsEndPoint"`
 	GlobalName              string `yaml:"globalAccountName"`
 	Key                     string `yaml:"analyticsKey"`
-	AnalyticsSchema         string `yaml:"analyticsSchema"`
+	AnalyticsGatewaySchema  string `yaml:"analyticsGatewaySchema"`
+	AnalyticsCosmosSchema   string `yaml:"analyticsCosmosSchema"`
 	AzureSubscriptionID     string `yaml:"azureSubscriptionId"`
 	AzureEventHubNameSpace  string `yaml:"azureEventHubNameSpace"`
 	AzureEventHubConnString string `yaml:"azureEventHubConnString"`
 	AzureClientID           string `yaml:"azureClientID"`
 	AzureClientSecret       string `yaml:"azureClientSecret"`
 	AzureTenantID           string `yaml:"azureTenantID"`
-	AzureHubName            string `yaml:"azureHubName"`
+	AzureGatewayHubName     string `yaml:"azureGatewayHubName"`
+	AzureCosmosHubName      string `yaml:"azureCosmosHubName"`
 	AzureResourceGroup      string `yaml:"azureResourceGroup"`
 }
 
@@ -53,7 +55,7 @@ func checkSchema(schema string, conf appdConfig) bool {
 	// Does schema exists?
 	response := doRequest(url, conf.GlobalName, conf.Key, nil, "GET")
 	if debug {
-		fmt.Printf("checkSchema [HTTP Response] %d\n", response)
+		fmt.Printf("checkSchema [name] %s [HTTP Response] %d\n", schema, response)
 	}
 	if response != 200 {
 		exists = false
@@ -64,16 +66,25 @@ func checkSchema(schema string, conf appdConfig) bool {
 	return exists
 }
 
-func createSchema(schema string, conf appdConfig) {
+func createSchema(schema string, conf appdConfig, deftype int) {
+	var schemaDef map[string]map[string]string
 	url := conf.AnalyticsEp + schemaURL + schema
 	if debug {
 		fmt.Println("createSchema: [URL] " + url)
 	}
-	schemaDef := map[string]map[string]string{"schema": {"level": "integer", "isRequestSuccess": "string", "time": "string", "operationName": "string", "category": "string", "durationMs": "integer", "callerIpAddress": "string", "correlationId": "string", "location": "string", "resourceId": "string", "backendMethod": "string", "backendUrl": "string", "method": "string", "url": "string", "backendResponseCode": "integer", "responseCode": "integer", "responseSize": "integer", "cache": "string", "backendTime": "integer", "requestSize": "integer", "apiId": "string", "operationId": "string", "apimSubscriptionId": "string", "clientProtocol": "string", "backendProtocol": "string", "apiRevision": "string", "source": "string", "reason": "string", "message": "string", "section": "string"}}
+	switch deftype {
+	case typeGateway:
+		schemaDef = map[string]map[string]string{"schema": {"level": "integer", "isRequestSuccess": "string", "time": "string", "operationName": "string", "category": "string", "durationMs": "integer", "callerIpAddress": "string", "correlationId": "string", "location": "string", "resourceId": "string", "backendMethod": "string", "backendUrl": "string", "method": "string", "url": "string", "backendResponseCode": "integer", "responseCode": "integer", "responseSize": "integer", "cache": "string", "backendTime": "integer", "requestSize": "integer", "apiId": "string", "operationId": "string", "apimSubscriptionId": "string", "clientProtocol": "string", "backendProtocol": "string", "apiRevision": "string", "source": "string", "reason": "string", "message": "string", "section": "string"}}
+	case typeCosmos:
+		schemaDef = map[string]map[string]string{"schema": {"time": "string", "resourceId": "string", "category": "string", "operationName": "string", "activityId": "string", "opCode": "string", "errorCode": "string", "duration": "integer", "requestCharge": "float", "databaseName": "string", "collectionName": "string", "retryCount": "string"}}
+	default:
+		fmt.Printf("ERROR - Unknown definition type for [schema] %s [type] %d\n", schema, deftype)
+	}
+
 	response := doRequest(url, conf.GlobalName, conf.Key, schemaDef, "POST")
 	if response != 201 {
-		fmt.Printf("ERROR - Failed to create schema [response] %d\n", response)
+		fmt.Printf("ERROR - Failed to create [schema] %s [response] %d\n", schema, response)
 	} else {
-		fmt.Printf("Successfully created schema [response] %d\n", response)
+		fmt.Printf("Successfully created [schema] %s [response] %d\n", schema, response)
 	}
 }

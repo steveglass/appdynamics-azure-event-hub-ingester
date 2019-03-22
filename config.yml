@@ -12,8 +12,10 @@ analyticsEndPoint:
 globalAccountName: 
 # unique key from analytics
 analyticsKey: 
-# this will be the name of the custom schema in AppD
-analyticsSchema: 
+# this will be the name of the custom schema for APIM in AppD
+analyticsGatewaySchema: 
+# this will be the name of the custom schema for CosmosDB in AppD
+analyticsCosmosSchema:
 
 azureSubscriptionId: 
 azureEventHubNameSpace: 
@@ -21,5 +23,8 @@ azureEventHubConnString:
 azureClientID: 
 azureClientSecret: 
 azureTenantID: 
-azureHubName: 
+# if you're not monitoring APIM, set this to nil
+azureGatewayHubName: nil
+# if you're not monitoring CosmosDB, set this to nil
+azureCosmosHubName: nil
 azureResourceGroup: 

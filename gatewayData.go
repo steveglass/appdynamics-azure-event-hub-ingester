@@ -40,7 +40,7 @@ type gatewayMainRecord struct {
 	Section             string `json:"section"`
 }
 
-func serializeRecord(data []byte, conf appdConfig) int {
+func serializeGatewayRecord(data []byte, conf appdConfig) int {
 	//var record []gatewayMainRecord
 	var d interface{}
 	if err := json.Unmarshal([]byte(data), &d); err != nil {
@@ -117,7 +117,7 @@ func serializeRecord(data []byte, conf appdConfig) int {
 		}
 
 		// Push data to analytics
-		url := conf.AnalyticsEp + publishURL + conf.AnalyticsSchema
+		url := conf.AnalyticsEp + publishURL + conf.AnalyticsGatewaySchema
 		response := doRequestJSON(url, conf.GlobalName, conf.Key, a, "POST")
 		if response != 200 {
 			fmt.Printf("ERROR pushing analytics to AppD [message] %d\n", response)

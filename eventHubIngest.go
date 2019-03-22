@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/Azure/azure-amqp-common-go/aad"
@@ -15,38 +16,74 @@ import (
 )
 
 const (
-	schemaURL  = "/events/schema/"
-	publishURL = "/events/publish/"
+	schemaURL   = "/events/schema/"
+	publishURL  = "/events/publish/"
+	typeGateway = 0 // Used for schema definitions. GATEWAY is APIM
+	typeCosmos  = 1 // COSMOSDB
+
 )
 
 // poor man's debug
 var debug = false
 
+var wg sync.WaitGroup
+
 // TODO - Need proper logging
 
 func main() {
-	exit := make(chan struct{})
+	hubCount := 0
 
-	// TODO: Read config file for AppDynamics + Azure info
+	// Read config file for AppDynamics + Azure info
 	conf := initConfig()
-	hub, partitions := initHub(conf)
-
-	// Checking to see if AppD analytics schema exists yet
-	exists := checkSchema(conf.AnalyticsSchema, conf)
-	if exists {
-		fmt.Println("Analytics schema exists")
-	} else {
-		fmt.Println("Analytics schema does not exist. Creating Now")
-		createSchema(conf.AnalyticsSchema, conf)
+	if conf.AzureCosmosHubName != "nil" {
+		hubCount++
+		// Checking to see if AppD analytics schema exists yet
+		exists := checkSchema(conf.AnalyticsCosmosSchema, conf)
+		if exists {
+			fmt.Println("Analytics schema for CosmosDB exists")
+		} else {
+			fmt.Println("Analytics schema for CosmosDB does not exist. Creating Now")
+			createSchema(conf.AnalyticsCosmosSchema, conf, typeCosmos)
+		}
+		go startListener(conf, conf.AzureCosmosHubName, typeCosmos)
+	}
+	if conf.AzureGatewayHubName != "nil" {
+		hubCount++
+		// Checking to see if AppD analytics schema exists yet
+		exists := checkSchema(conf.AnalyticsGatewaySchema, conf)
+		if exists {
+			fmt.Println("Analytics schema for Gateway (APIM) exists")
+		} else {
+			fmt.Println("Analytics schema for Gateway (APIM) does not exist. Creating Now")
+			createSchema(conf.AnalyticsGatewaySchema, conf, typeGateway)
+		}
+		go startListener(conf, conf.AzureGatewayHubName, typeGateway)
 	}
 
+	wg.Add(hubCount)
+
+	wg.Wait()
+}
+
+func startListener(conf appdConfig, name string, deftype int) {
+	exit := make(chan struct{})
+	var num int
+	hub, partitions := initHub(conf, name)
+
 	handler := func(ctx context.Context, event *eventhub.Event) error {
-		num := serializeRecord(event.Data, conf)
-		fmt.Printf("Number of Records Sent to Analytics: %d\n", num)
+		switch deftype {
+		case typeGateway:
+			num = serializeGatewayRecord(event.Data, conf)
+		case typeCosmos:
+			num = serializeCosmosRecord(event.Data, conf)
+		default:
+			fmt.Printf("Unkown type in event handler - shouldn't actually be able to get here. [type] %d\n", deftype)
+		}
+		fmt.Printf("Number of Records Sent to Analytics(%s): %d\n", name, num)
 		return nil
 	}
 
-	fmt.Println("Initializing Event Hub Listener with callback...")
+	fmt.Printf("Initializing Event Hub Listener for %s with callback...\n", name)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	for _, partitionID := range partitions {
@@ -54,19 +91,20 @@ func main() {
 	}
 	cancel()
 
-	fmt.Println("Initialization Complete. Listening to Event Hub")
+	fmt.Printf("Initialization Complete. Listening to Event Hub %s\n", name)
 
 	select {
 	case <-exit:
 		fmt.Println("closing after 2 seconds")
 		select {
 		case <-time.After(2 * time.Second):
+			defer wg.Done()
 			return
 		}
 	}
 }
 
-func initHub(conf appdConfig) (*eventhub.Hub, []string) {
+func initHub(conf appdConfig, name string) (*eventhub.Hub, []string) {
 	// Set env var used by Azure libs
 	os.Setenv("AZURE_CLIENT_ID", conf.AzureClientID)
 	os.Setenv("AZURE_CLIENT_SECRET", conf.AzureClientSecret)
@@ -75,7 +113,7 @@ func initHub(conf appdConfig) (*eventhub.Hub, []string) {
 	os.Setenv("EVENTHUB_NAMESPACE", conf.AzureEventHubNameSpace)
 	os.Setenv("EVENTHUB_CONNECTION_STRING", conf.AzureEventHubConnString)
 	namespace := mustGetenv("EVENTHUB_NAMESPACE")
-	hubMgmt, err := ensureEventHub(context.Background(), conf.AzureHubName, conf)
+	hubMgmt, err := ensureEventHub(context.Background(), name, conf)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -84,7 +122,7 @@ func initHub(conf appdConfig) (*eventhub.Hub, []string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	hub, err := eventhub.NewHub(namespace, conf.AzureHubName, provider)
+	hub, err := eventhub.NewHub(namespace, name, provider)
 	if err != nil {
 		panic(err)
 	}
