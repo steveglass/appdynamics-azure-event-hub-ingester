@@ -9,9 +9,6 @@ import (
 )
 
 type appdConfig struct {
-	Controller              string `yaml:"controller"`
-	Port                    int    `yaml:"port"`
-	SSL                     string `yaml:"ssl"`
 	AnalyticsEp             string `yaml:"analyticsEndPoint"`
 	GlobalName              string `yaml:"globalAccountName"`
 	Key                     string `yaml:"analyticsKey"`
@@ -39,6 +36,17 @@ func initConfig() appdConfig {
 	err = yaml.Unmarshal(yamlFile, &appd)
 	if err != nil {
 		log.Fatalf("Unmarshal: %v", err)
+	}
+
+	if appd.AzureGatewayHubName != "" {
+		if appd.AnalyticsGatewaySchema == "" {
+			panic("ERROR: An Azure Gateway Hub (APIM) was configured without a schema name, abort!")
+		}
+	}
+	if appd.AzureCosmosHubName != "" {
+		if appd.AnalyticsCosmosSchema == "" {
+			panic("ERROR: An Azure CosmosDB Hub was configured without a schema name, abort!")
+		}
 	}
 
 	return appd

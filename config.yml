@@ -1,11 +1,3 @@
-# yaml Go dep: go get gopkg.in/yaml.v2
-
-# AppD controller
-controller: 
-# AppD port
-port: 
-# true or false
-ssl: 
 # AppD analytics endpoint
 analyticsEndPoint: 
 # AppD global account name on license page
@@ -17,14 +9,22 @@ analyticsGatewaySchema:
 # this will be the name of the custom schema for CosmosDB in AppD
 analyticsCosmosSchema:
 
+# subscriptionId is the Azure Subscription ID 
 azureSubscriptionId: 
-azureEventHubNameSpace: 
-azureEventHubConnString: 
+# Application ID for your application via Access Control (IAM)
 azureClientID: 
+# client secret is available in the keys section for app registrations
 azureClientSecret: 
-azureTenantID: 
+# tenantId is the Azure Active Directory “Directory ID”
+
+# EventHub namespace
+azureEventHubNameSpace: 
+# EventHub conneciton string
+azureEventHubConnString: 
+# Name of the resource group
+azureResourceGroup: 
+
 # if you're not monitoring APIM, set this to nil
 azureGatewayHubName: nil
 # if you're not monitoring CosmosDB, set this to nil
 azureCosmosHubName: nil
-azureResourceGroup: 
