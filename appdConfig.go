@@ -38,12 +38,12 @@ func initConfig() appdConfig {
 		log.Fatalf("Unmarshal: %v", err)
 	}
 
-	if appd.AzureGatewayHubName != "" {
+	if appd.AzureGatewayHubName != "nil" {
 		if appd.AnalyticsGatewaySchema == "" {
 			panic("ERROR: An Azure Gateway Hub (APIM) was configured without a schema name, abort!")
 		}
 	}
-	if appd.AzureCosmosHubName != "" {
+	if appd.AzureCosmosHubName != "nil" {
 		if appd.AnalyticsCosmosSchema == "" {
 			panic("ERROR: An Azure CosmosDB Hub was configured without a schema name, abort!")
 		}

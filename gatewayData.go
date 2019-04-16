@@ -53,56 +53,59 @@ func serializeGatewayRecord(data []byte, conf appdConfig) int {
 
 	for i := 0; i < len(j); i++ {
 		/* Main Record Map */
-		k := j[i].(map[string]interface{})
-		/* Properties Map */
-		l := k["properties"].(map[string]interface{})
+		if j[i] != nil {
+			k := j[i].(map[string]interface{})
 
-		/* Set the record */
-		record[i].IsRequestSuccess = fmt.Sprintf("%v", k["isRequestSuccess"])
-		leveStr := fmt.Sprint(k["level"])
-		record[i].Level, _ = strconv.Atoi(leveStr)
-		record[i].Time = fmt.Sprintf("%v", k["time"])
-		record[i].OperationName = fmt.Sprintf("%v", k["operationName"])
-		record[i].Location = fmt.Sprintf("%v", k["location"])
-		record[i].Category = fmt.Sprintf("%v", k["category"])
-		record[i].CorrelationID = fmt.Sprintf("%v", k["correlationId"])
-		record[i].CallerIPAddress = fmt.Sprintf("%v", k["callerIpAddress"])
-		durationStr := fmt.Sprint(k["durationMs"])
-		record[i].DurationMs, _ = strconv.Atoi(durationStr)
-		record[i].ResourceID = fmt.Sprintf("%v", k["resourceId"])
-		record[i].Time = fmt.Sprintf("%v", k["time"])
-		/* Set the properties */
-		record[i].Method = fmt.Sprintf("%v", l["method"])
-		record[i].BackendMethod = fmt.Sprintf("%v", l["backendMethod"])
-		record[i].BackendURL = fmt.Sprintf("%v", l["backendMethod"])
-		record[i].URL = fmt.Sprintf("%v", l["backendMethod"])
-		backendRespStr := fmt.Sprint(l["backendResponseCode"])
-		record[i].BackendResponseCode, _ = strconv.Atoi(backendRespStr)
-		responseCodeStr := fmt.Sprint(l["responseCode"])
-		record[i].ResponseCode, _ = strconv.Atoi(responseCodeStr)
-		responseSizeStr := fmt.Sprint(l["responseSize"])
-		record[i].ResponseSize, _ = strconv.Atoi(responseSizeStr)
-		record[i].Cache = fmt.Sprintf("%v", l["backendMethod"])
-		backendTimeStr := fmt.Sprint(l["backendTime"])
-		record[i].BackendTime, _ = strconv.Atoi(backendTimeStr)
-		requestSizeStr := fmt.Sprint(l["requestSize"])
-		record[i].RequestSize, _ = strconv.Atoi(requestSizeStr)
-		record[i].APIID = fmt.Sprintf("%v", l["apiId"])
-		record[i].OperationID = fmt.Sprintf("%v", l["operationId"])
-		record[i].ApimSubscriptionID = fmt.Sprintf("%v", l["apimSubscriptionId"])
-		record[i].ClientProtocol = fmt.Sprintf("%v", l["clientProtocol"])
-		record[i].BackendProtocol = fmt.Sprintf("%v", l["backendProtocol"])
-		record[i].APIRevision = fmt.Sprintf("%v", l["apiRevision"])
-		/* Last error, only if the request failed */
-		if record[i].IsRequestSuccess == "false" {
-			/* Last Error Map, if it exists */
-			e := l["lastError"].(map[string]interface{})
-			record[i].Source = fmt.Sprintf("%v", e["source"])
-			record[i].Reason = fmt.Sprintf("%v", e["reason"])
-			record[i].Message = fmt.Sprintf("%v", e["message"])
-			record[i].Section = fmt.Sprintf("%v", e["section"])
-		}
-	}
+			/* Set the record */
+			record[i].IsRequestSuccess = fmt.Sprintf("%v", k["isRequestSuccess"])
+			leveStr := fmt.Sprint(k["level"])
+			record[i].Level, _ = strconv.Atoi(leveStr)
+			record[i].Time = fmt.Sprintf("%v", k["time"])
+			record[i].OperationName = fmt.Sprintf("%v", k["operationName"])
+			record[i].Location = fmt.Sprintf("%v", k["location"])
+			record[i].Category = fmt.Sprintf("%v", k["category"])
+			record[i].CorrelationID = fmt.Sprintf("%v", k["correlationId"])
+			record[i].CallerIPAddress = fmt.Sprintf("%v", k["callerIpAddress"])
+			durationStr := fmt.Sprint(k["durationMs"])
+			record[i].DurationMs, _ = strconv.Atoi(durationStr)
+			record[i].ResourceID = fmt.Sprintf("%v", k["resourceId"])
+			record[i].Time = fmt.Sprintf("%v", k["time"])
+			/* Set the properties */
+			if k["properties"] != nil {
+				l := k["properties"].(map[string]interface{})
+				record[i].Method = fmt.Sprintf("%v", l["method"])
+				record[i].BackendMethod = fmt.Sprintf("%v", l["backendMethod"])
+				record[i].BackendURL = fmt.Sprintf("%v", l["backendMethod"])
+				record[i].URL = fmt.Sprintf("%v", l["backendMethod"])
+				backendRespStr := fmt.Sprint(l["backendResponseCode"])
+				record[i].BackendResponseCode, _ = strconv.Atoi(backendRespStr)
+				responseCodeStr := fmt.Sprint(l["responseCode"])
+				record[i].ResponseCode, _ = strconv.Atoi(responseCodeStr)
+				responseSizeStr := fmt.Sprint(l["responseSize"])
+				record[i].ResponseSize, _ = strconv.Atoi(responseSizeStr)
+				record[i].Cache = fmt.Sprintf("%v", l["backendMethod"])
+				backendTimeStr := fmt.Sprint(l["backendTime"])
+				record[i].BackendTime, _ = strconv.Atoi(backendTimeStr)
+				requestSizeStr := fmt.Sprint(l["requestSize"])
+				record[i].RequestSize, _ = strconv.Atoi(requestSizeStr)
+				record[i].APIID = fmt.Sprintf("%v", l["apiId"])
+				record[i].OperationID = fmt.Sprintf("%v", l["operationId"])
+				record[i].ApimSubscriptionID = fmt.Sprintf("%v", l["apimSubscriptionId"])
+				record[i].ClientProtocol = fmt.Sprintf("%v", l["clientProtocol"])
+				record[i].BackendProtocol = fmt.Sprintf("%v", l["backendProtocol"])
+				record[i].APIRevision = fmt.Sprintf("%v", l["apiRevision"])
+				/* Last error, only if the request failed */
+				if l["lastError"] != nil {
+					/* Last Error Map, if it exists */
+					e := l["lastError"].(map[string]interface{})
+					record[i].Source = fmt.Sprintf("%v", e["source"])
+					record[i].Reason = fmt.Sprintf("%v", e["reason"])
+					record[i].Message = fmt.Sprintf("%v", e["message"])
+					record[i].Section = fmt.Sprintf("%v", e["section"])
+				}
+			} // End of Property check
+		} // End of For Loop
+	} // End of record Map check
 
 	// Loop through each record in the batch and send to analytics
 	for i := 0; i < len(record); i++ {
@@ -126,6 +129,5 @@ func serializeGatewayRecord(data []byte, conf appdConfig) int {
 			fmt.Printf("Analytics [response] %d [record]: %+v\n", response, record)
 		}
 	}
-
 	return len(record)
 }

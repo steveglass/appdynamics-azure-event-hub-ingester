@@ -71,6 +71,9 @@ func startListener(conf appdConfig, name string, deftype int) {
 	hub, partitions := initHub(conf, name)
 
 	handler := func(ctx context.Context, event *eventhub.Event) error {
+		if debug {
+			fmt.Printf("Message Handler: %s\n", event.Data)
+		}
 		switch deftype {
 		case typeGateway:
 			num = serializeGatewayRecord(event.Data, conf)
